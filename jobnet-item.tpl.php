@@ -34,7 +34,7 @@
       <div class="caption">
         <h4><?php print $Headline ?></h4>
         <p><?php print $Body ?></p>
-        <p><small class="text-muted"><i class="glyphicon glyphicon-time"></i> Indrykket på Jobnet den: <?php print $PostingCreated ?></small></p>
+        <p><small class="text-muted"><i class="glyphicon glyphicon-time"></i> <?php print t('Indrykket på Jobnet den: @date', array('@date' =>  $PostingCreated)) ?></small></p>
         <p><small class="text-muted"><i class="glyphicon glyphicon-map-marker"></i> Arbejdssted: <?php print $WorkLocation ?></small></p>
         <p><a href="<?php print $DetailsUrl; ?>" class="btn btn-primary" target="_blank" role="button">Se jobbet</a> </p>
       </div>
