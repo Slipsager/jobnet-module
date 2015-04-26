@@ -56,6 +56,17 @@
 
         // Set block title.
         $block['subject'] = t('jobnet');
+		
+		$block['content']['list_description']= array(
+		'#type' => 'markup',
+		'#markup' => t('Denne liste viser de sidste @antal resultater med søgeordet: @searchstring',
+		array(
+		'@antal' => variable_get('jobnet_num_results'),		
+		'@searchstring' => variable_get('jobnet_search_string')  )
+		  ),
+		  '#prefix' => '<p>',
+		  '#suffix' => '</p>'
+		);	
 
         
         // Get content from API.
