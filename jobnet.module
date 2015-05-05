@@ -181,15 +181,14 @@
   * Deklarerer en theme function: theme_jobnet_item
   * Dette tillader et theme at override outputtet fra mit modul med en function i template.php
   * THEME_jobnet_item
-  
-  function jobnet_theme(){
-	return array(
-	  'jobnet_item' => array(
-		'variables' => array('item' => NULL),	
-		),
-	  );  
-  }
-  */
+  * function jobnet_theme(){
+  *	return array(
+  *	  'jobnet_item' => array(
+  *		'variables' => array('item' => NULL),	
+  *		),
+  *	  );  
+  *}
+  **/
   
   /**
   *implements hook_theme
@@ -214,13 +213,13 @@
   *
   */
   
- /* function theme_jobnet_item($variables){
-	  $output = '<h3 class="headline">' . $variables['DiscoAmsName']. '</h3>';
-	  dsm($variables);
-	  
-	  return $output;
-	  
-  }*/
+ /** function theme_jobnet_item($variables){
+  *	  $output = '<h3 class="headline">' . $variables['DiscoAmsName']. '</h3>';
+  *	  dsm($variables);
+  *  
+  *	  return $output;
+  *	  
+  }**/
   /**
   *preprocess function
   * Kan bruges til at manipulere items inden output
