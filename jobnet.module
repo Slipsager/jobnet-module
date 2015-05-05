@@ -1,14 +1,14 @@
 <?php
 
-  /**
-   * Implements hook_block_info().
-   *
-   * Declares a block to provide to Drupal. This can also specify block
-   * configuration settings, like here where the cache is determined be the
-   * user role.
-   *
-   * @url: https://api.drupal.org/api/drupal/modules!block!block.api.php/function/hook_block_info/7
-   */
+/**
+* Implements hook_block_info().
+*
+* Declares a block to provide to Drupal. This can also specify block
+* configuration settings, like here where the cache is determined be the
+* user role.
+*
+* @url: https://api.drupal.org/api/drupal/modules!block!block.api.php/function/hook_block_info/7
+*/
   function jobnet_block_info() {
     $blocks['jobnet'] = array(
       'info' => t('jobnet info'),
@@ -18,193 +18,196 @@
     return $blocks;
   }
 
-	 /**
-   * Implements hook_help().
-   *
-   * You can add documentation and help here (in admin/help#weater_news). This
-   * documentation can help the users use and extend you module.
-   *
-   * @url: https://api.drupal.org/api/drupal/modules!help!help.api.php/function/hook_help/7
-   */
-  function jobnet_help($path, $arg) {
-    switch ($path) {
-      case 'admin/setting/jobnet':
-        return t('This module displays a block which shows a list recent jobnet jobs.');
+/**
+* Implements hook_help().
+*
+* You can add documentation and help here (in admin/help#weater_news). This
+* documentation can help the users use and extend you module.
+*
+* @url: https://api.drupal.org/api/drupal/modules!help!help.api.php/function/hook_help/7
+**/
 
-      case 'admin/help#jobnet';
-        $output = '<h2>' . t('About') . '</h2>';
-        $output .= '<p>' . t('Henter de sidste jobs fra Jobnet.dk.') . '</p>';
-        $output .= '<p>' . t('Bruger JSON fra yahooapis.com, da jobnet.dk ikke tillader crossdomain access ') . '</p>';
-        return $output;
-    }
+function jobnet_help($path, $arg) {
+  switch ($path) {
+	case 'admin/setting/jobnet':
+	  return t('This module displays a block which shows a list recent jobnet jobs.');
 
-	}
-
-  /**
-   * Implements hook_block_view().
-   *
-   * Creates content for our block. It sets the title for the block, and returns
-   * our jobs (from our custom callback) as a render array'.
-   *
-   * @url: https://api.drupal.org/api/drupal/modules!block!block.api.php/function/hook_block_view/7
-   */
-  function jobnet_block_view($delta = '') {
-    $block = array();
-
-    switch ($delta) {
-      case 'jobnet':
-
-        // Set block title.
-        $block['subject'] = t('jobnet');
-		
-		$block['content']['list_description']= array(
-		'#type' => 'markup',
-		'#markup' => t('Denne liste viser de sidste @antal resultater med søgeordet: @searchstring',
-		array(
-		'@antal' => variable_get('jobnet_num_results'),		
-		'@searchstring' => variable_get('jobnet_search_string')  )
-		  ),
-		  '#prefix' => '<p>',
-		  '#suffix' => '</p>'
-		);	
-
-        
-        // Get content from API.
-        $items = jobnet_api_content();
-
-        // Create render arrays.
-		
-		foreach ($items as $item){
-		$block['content'][] = array(
-		'#type' => 'markup',
-		'#markup' => theme('jobnet_item',$item),
-		
-		);	
-		}
-    }
-
-    return $block;
+	case 'admin/help#jobnet';
+	  $output = '<h2>' . t('About') . '</h2>';
+	  $output .= '<p>' . t('Henter de sidste jobs fra Jobnet.dk.') . '</p>';
+	  $output .= '<p>' . t('Bruger JSON fra yahooapis.com, da jobnet.dk ikke tillader crossdomain access ') . '</p>';
+	  return $output;
   }
 
+}
 
-    /**
-   * Implements hook_menu().
-   *
-   * Defines paths to provide page callbacks and menu items for the site.
-   * Here it defines a configuration page with callback to a form, we'll
-   * create later on.
-   *
-   * @url: https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_menu/7
-   */
+/**
+* Implements hook_block_view().
+*
+* Creates content for our block. It sets the title for the block, and returns
+* our jobs (from our custom callback) as a render array'.
+*
+* @url: https://api.drupal.org/api/drupal/modules!block!block.api.php/function/hook_block_view/7
+**/
 
-  function jobnet_menu() {
-    $items = array();
+function jobnet_block_view($delta = '') {
+  $block = array();
 
-    // Module configuration page.
-    $items['admin/config/content/jobnet'] = array(
-      'title' => 'jobnet info module',
-      'description' => 'Configuration for jobnet module',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('jobnet_form'),
-      'access arguments' => array('administer site configuration'),
-      'type' => MENU_NORMAL_ITEM,
-    );
+  switch ($delta) {
+	case 'jobnet':
 
-    return $items;
-  }
-
-   /**
-   * Implements hook_form().
-   *
-   * Creates a configuration form. See the API reference for info on different
-   * form inputs.
-   *
-   * From API Reference: https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7
-   *
-   * @url: https://api.drupal.org/api/drupal/modules!node!node.api.php/function/hook_form/7
-   */
-  function jobnet_form($form, &$form_state) {
-    // Fieldset.
-    $form['jobnet_api'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Open jobnet API'),
-      '#weight' => 0,
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-	// Selectfield for choosing how many jobs to show
-	$form['jobnet_api']['jobnet_num_results'] = array(
-       '#type' => 'select',
-       '#title' => t('Antal jobs'),
-       '#options' => array(
-	   	  5 => 5,
-         10 => 10,
-         20 => 20,
-		 30 => 30,
-       ),
-       '#default_value' => variable_get('jobnet_num_results', 5),
-       '#description' => t('Choose how many jobs to show'),
-   );
-   // selectfield to choose region
-    $form['jobnet_api']['jobnet_region'] = array(
-       '#type' => 'select',
-       '#title' => t('Choose Region'),
-       '#options' => array(
-          1084 => t('Hovedstaden og Bornholm'),
-         1085 => t('Øvrige Sjælland'),
-         1082 => t('Midtjylland'),
-         1081 => t('Nordjylland'),
-         1083 => t('Syddanmark'),
+	  // Set block title.
+	  $block['subject'] = t('jobnet');
+	  
+	  $block['content']['list_description']= array(
+	  '#type' => 'markup',
+	  '#markup' => t('Denne liste viser de sidste @antal resultater med søgeordet: @searchstring',
+	  array(
+	  '@antal' => variable_get('jobnet_num_results'),		
+	  '@searchstring' => variable_get('jobnet_search_string')  )
 		),
-       '#default_value' => variable_get('jobnet_region', 1084),
-       '#description' => t('Choose region to show jobs from'),
-   );
-    // Textfield for search term.
-    $form['jobnet_api']['jobnet_search_string'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Search term'),
-      '#default_value' => variable_get('jobnet_search_string','web'),
-      '#size' => 40,
-      '#maxlength' => 40,
-      '#description' => t('Enter the a search term to search specific jobs'),
-    );
+		'#prefix' => '<p>',
+		'#suffix' => '</p>'
+	  );	
 
-   
-   
-    return system_settings_form($form);
+	  
+	  // Get content from API.
+	  $items = jobnet_api_content();
+
+	  // Create render arrays.
+	  
+	  foreach ($items as $item){
+	  $block['content'][] = array(
+	  '#type' => 'markup',
+	  '#markup' => theme('jobnet_item',$item),
+	  
+	  );	
+	  }
   }
-  
-  /**
-  *
-  *implements hook_theme
-  *
-  * Deklarerer en theme function: theme_jobnet_item
-  * Dette tillader et theme at override outputtet fra mit modul med en function i template.php
-  * THEME_jobnet_item
-  * function jobnet_theme(){
-  *	return array(
-  *	  'jobnet_item' => array(
-  *		'variables' => array('item' => NULL),	
-  *		),
-  *	  );  
-  *}
-  **/
-  
-  /**
-  *implements hook_theme
-  * Denne implementation af hook_theme gør brug af en tpl.php fil i stedetfor en theme function
-  */
-  function jobnet_theme(){
-	return array(
-		'jobnet_item' => array(
-		//arguments sender de data til template som der er brug for, her hele item.
-		// Kunne også være mindre bidder f.eks DiscoAmsName
-		'arguments' =>  array('item' => NULL),
-		//definerer templatenavn uden tpl.php
-		'template'  => 'jobnet-item', //definerer templatenavn uden tpl.php
-		),
-	);
-  }
+
+  return $block;
+}
+
+
+/**
+* Implements hook_menu().
+*
+* Defines paths to provide page callbacks and menu items for the site.
+* Here it defines a configuration page with callback to a form, we'll
+* create later on.
+*
+* @url: https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_menu/7
+**/
+
+function jobnet_menu() {
+  $items = array();
+
+  // Module configuration page.
+  $items['admin/config/content/jobnet'] = array(
+	'title' => 'jobnet info module',
+	'description' => 'Configuration for jobnet module',
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('jobnet_form'),
+	'access arguments' => array('administer site configuration'),
+	'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+* Implements hook_form().
+*
+* Creates a configuration form. See the API reference for info on different
+* form inputs.
+*
+* From API Reference: https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7
+*
+* @url: https://api.drupal.org/api/drupal/modules!node!node.api.php/function/hook_form/7
+**/
+
+function jobnet_form($form, &$form_state) {
+  // Fieldset.
+  $form['jobnet_api'] = array(
+	'#type' => 'fieldset',
+	'#title' => t('Open jobnet API'),
+	'#weight' => 0,
+	'#collapsible' => TRUE,
+	'#collapsed' => FALSE,
+  );
+  // Selectfield for choosing how many jobs to show
+  $form['jobnet_api']['jobnet_num_results'] = array(
+	 '#type' => 'select',
+	 '#title' => t('Antal jobs'),
+	 '#options' => array(
+	 5 => 5,
+	 10 => 10,
+	 20 => 20,
+	 30 => 30,
+	 ),
+	 '#default_value' => variable_get('jobnet_num_results', 5),
+	 '#description' => t('Choose how many jobs to show'),
+ );
+ // selectfield to choose region
+  $form['jobnet_api']['jobnet_region'] = array(
+	 '#type' => 'select',
+	 '#title' => t('Choose Region'),
+	 '#options' => array(
+		1084 => t('Hovedstaden og Bornholm'),
+	   1085 => t('Øvrige Sjælland'),
+	   1082 => t('Midtjylland'),
+	   1081 => t('Nordjylland'),
+	   1083 => t('Syddanmark'),
+	  ),
+	 '#default_value' => variable_get('jobnet_region', 1084),
+	 '#description' => t('Choose region to show jobs from'),
+ );
+  // Textfield for search term.
+  $form['jobnet_api']['jobnet_search_string'] = array(
+	'#type' => 'textfield',
+	'#title' => t('Search term'),
+	'#default_value' => variable_get('jobnet_search_string','web'),
+	'#size' => 40,
+	'#maxlength' => 40,
+	'#description' => t('Enter the a search term to search specific jobs'),
+  );
+
+ 
+ 
+  return system_settings_form($form);
+}
+
+/**
+*
+*implements hook_theme
+*
+* Deklarerer en theme function: theme_jobnet_item
+* Dette tillader et theme at override outputtet fra mit modul med en function i template.php
+* THEME_jobnet_item
+* function jobnet_theme(){
+*	return array(
+*	  'jobnet_item' => array(
+*		'variables' => array('item' => NULL),	
+*		),
+*	  );  
+*}
+**/
+
+/**
+*implements hook_theme
+* Denne implementation af hook_theme gør brug af en tpl.php fil i stedetfor en theme function
+*/
+function jobnet_theme(){
+  return array(
+	  'jobnet_item' => array(
+	  //arguments sender de data til template som der er brug for, her hele item.
+	  // Kunne også være mindre bidder f.eks DiscoAmsName
+	  'arguments' =>  array('item' => NULL),
+	  //definerer templatenavn uden tpl.php
+	  'template'  => 'jobnet-item', //definerer templatenavn uden tpl.php
+	  ),
+  );
+}
   
   
   /**
